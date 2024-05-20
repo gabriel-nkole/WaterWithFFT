@@ -1,0 +1,48 @@
+#pragma kernel FoamCompute
+
+//Texture params
+float M;
+
+//Foam params
+float lambda;
+float FoamBias;
+float decayFactor;
+float4 FoamColor;
+float L0divL;
+
+
+//In
+float deltaT;
+Texture2D<float4> Displacement;
+Texture2D<float4> Slope;
+
+//Out
+RWTexture2D<float4> Foam;
+
+
+[numthreads(8,8,1)]
+void FoamCompute (uint3 id : SV_DispatchThreadID){
+    if(id.x < uint(M) && id.y < uint(M)){
+        //current foam
+        float4 col = Foam[id.xy];
+
+        //decay
+        col = pow(abs(decayFactor), deltaT) * col;
+
+        //derivatives
+        float dXdx = Displacement[id.xy].w * L0divL;
+        float4 d = Slope[id.xy] * L0divL;
+        float dZdx = d.z;
+        float dZdz = d.w;
+
+        //jacobian
+        float det = (1 + dXdx)*(1 + dZdz) - dZdx*dZdx;
+        if(det-FoamBias < 0){
+            //col += saturate(det);
+            col += 0.1*FoamColor;
+        }
+
+        //col = max(col, 0.5);
+        Foam[id.xy] = col;
+    }
+}

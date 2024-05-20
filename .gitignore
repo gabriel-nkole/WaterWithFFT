@@ -1,0 +1,17 @@
+Assets/Textures/AllSkyFree/.vs/
+.vsconfig
+Assembly-CSharp.csproj
+Assets/Textures/
+Library/
+Logs/
+WaterWithFFT_2.sln
+WaterWithFFT_HighResScreenshot_V11 (foam based on deltaT).png
+WaterWithFFT_HighResScreenshot_V11_2 [BDRF] Alternative.png
+WaterWithFFT_HighResScreenshot_V11_2 [BDRF] Alternative_2.png
+WaterWithFFT_HighResScreenshot_V11_2 [BDRF].png
+obj/
+.vs/
+WaterWithFFT_HighResScreenshot_V11(foam based on deltaT).png
+WaterWithFFT_HighResScreenshot_V11_2[BDRF].png
+WaterWithFFT_HighResScreenshot_V11_2[BDRF]Alternative.png
+WaterWithFFT_HighResScreenshot_V11_2[BDRF]Alternative_2.png

@@ -1,0 +1,66 @@
+#pragma kernel CreateButterflyTexture
+
+//general
+float M;
+uint bits;
+
+RWTexture2D<float4> butterfly;
+
+#define pi 3.14159
+
+uint bitsReversed(uint num) {
+    uint rev = 0;
+    for (uint i = 0; i < bits; i++) {
+        uint bit_n = (num >> i) & (uint)1;
+        rev = rev | (bit_n << (bits-1 - i));
+    }
+    return rev;
+}
+
+[numthreads(8,8,1)]
+void CreateButterflyTexture (uint3 id : SV_DispatchThreadID){
+    if(id.x < bits && id.y < uint(M)){
+        float m = id.y;
+        float stage = id.x;
+
+        float k = fmod(m * (M/pow(2, stage + 1)), M);
+        float exp = 2.0 * pi * k / M;
+        float twiddle_real = cos(exp);
+        float twiddle_imag = sin(exp);
+
+        int butterflyspan = int(pow(2, stage));
+
+        int butterflywing = 0;
+        if(fmod(m, pow(2, stage + 1)) < pow(2, stage)){
+            butterflywing = 1;
+        }
+
+
+        if (stage == 0.0){
+            if (butterflywing == 1){
+                butterfly[id.xy] = float4(
+                    twiddle_real, twiddle_imag, bitsReversed(m), bitsReversed(m+1)
+                );
+            }
+
+            else{
+                butterfly[id.xy] = float4(
+                    twiddle_real, twiddle_imag, bitsReversed(m-1), bitsReversed(m)
+                );
+            }
+        }
+        else{
+            if (butterflywing == 1){
+                butterfly[id.xy] = float4(
+                    twiddle_real, twiddle_imag, m, m + butterflyspan
+                );
+            }
+
+            else{
+                butterfly[id.xy] = float4(
+                    twiddle_real, twiddle_imag, m - butterflyspan, m
+                );
+            }
+        }
+    }
+}

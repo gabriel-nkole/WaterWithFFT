@@ -1,0 +1,65 @@
+#include "complex_math.cginc"
+
+#pragma kernel HorizontalButterflyWrapper
+#pragma kernel VerticalButterflyWrapper
+
+//general
+float M;
+Texture2D<float4> butterfly;
+
+bool pingpong;
+int stage;
+RWTexture2D<float4> pingpong0;
+RWTexture2D<float4> pingpong1;
+
+
+void HorizontalButterfly(uint2 coords, RWTexture2D<float4> pingpongIn, RWTexture2D<float4> pingpongOut){
+    float4 data = butterfly[uint2(stage, coords.x)];
+    
+    float4 p = pingpongIn[uint2(data.b, coords.y)];
+    float4 q = pingpongIn[uint2(data.a, coords.y)];
+    float2 w = data.rg;
+
+    float2 H1 = complex_add(p.rg, complex_mul(w, q.rg));
+    float2 H2 = complex_add(p.ba, complex_mul(w, q.ba));
+
+    pingpongOut[coords] = float4(H1, H2);
+}
+
+void VerticalButterfly(uint2 coords, RWTexture2D<float4> pingpongIn, RWTexture2D<float4> pingpongOut){
+    float4 data = butterfly[uint2(stage, coords.y)];
+
+    float4 p = pingpongIn[uint2(coords.x, data.b)];
+    float4 q = pingpongIn[uint2(coords.x, data.a)];
+    float2 w = data.rg;
+
+    float2 H1 = complex_add(p.rg, complex_mul(w, q.rg));
+    float2 H2 = complex_add(p.ba, complex_mul(w, q.ba));
+
+    pingpongOut[coords] = float4(H1, H2);
+}
+
+
+[numthreads(8,8,1)]
+void HorizontalButterflyWrapper (uint3 id : SV_DispatchThreadID){
+    if(id.x < uint(M) && id.y < uint(M)){
+        if(pingpong==0){
+            HorizontalButterfly(id.xy, pingpong0, pingpong1);        
+        }
+        else{
+            HorizontalButterfly(id.xy, pingpong1, pingpong0);
+        }
+    }
+}
+
+[numthreads(8,8,1)]
+void VerticalButterflyWrapper (uint3 id : SV_DispatchThreadID){
+    if(id.x < uint(M) && id.y < uint(M)){
+        if(pingpong==0){
+            VerticalButterfly(id.xy, pingpong0, pingpong1);        
+        }
+        else{
+            VerticalButterfly(id.xy, pingpong1, pingpong0);
+        }
+    }
+}

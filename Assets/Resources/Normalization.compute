@@ -1,0 +1,33 @@
+#pragma kernel Normalization
+
+//Params
+float M;
+float lambda;
+
+
+//In
+Texture2D<float4> X_Y_Z_dXdx;
+Texture2D<float4> dYdx_dYdz_dZdx_dZdz;
+
+//Out
+RWTexture2D<float4> Displacement;
+RWTexture2D<float4> Slope;
+
+
+[numthreads(8,8,1)]
+void Normalization (uint3 id : SV_DispatchThreadID){
+    if(id.x < uint(M) && id.y < uint(M)){
+        float perm = 1.0;
+        int idx = int(fmod(int(id.y + id.x), 2));
+        perm = idx ? 1.0 : -1.0;
+        float norm_factor = perm/(M*M);
+
+        float2 X_Y = X_Y_Z_dXdx[id.xy].rg * norm_factor;
+        float2 Z_dXdx = X_Y_Z_dXdx[id.xy].ba * norm_factor;
+        float2 dYdx_dYdz = dYdx_dYdz_dZdx_dZdz[id.xy].rg * norm_factor;
+        float2 dZdx_dZdz = dYdx_dYdz_dZdx_dZdz[id.xy].ba * norm_factor;
+
+        Displacement[id.xy] = float4(X_Y.x * lambda, X_Y.y, Z_dXdx * lambda);
+        Slope[id.xy] = float4(dYdx_dYdz, dZdx_dZdz * lambda);
+    }
+}
