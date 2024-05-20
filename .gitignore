@@ -1,7 +1,7 @@
-Assets/Textures/AllSkyFree/.vs/
+Assets/Textures/AllSkyFree/
+.vs/
 .vsconfig
 Assembly-CSharp.csproj
-Assets/Textures/
 Library/
 Logs/
 WaterWithFFT_2.sln
