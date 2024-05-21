@@ -2,7 +2,7 @@
 by Gabriel Nkole
 
 ## Description
-Ocean rendering on a 1000x1000 plane using the Phillips Spectra & an optimized GPU FFT algorithm.
+Ocean rendering on a 1000mx1000m plane using the Phillips Spectra & an optimized GPU FFT algorithm.
 
 ## Features
 - Choppy Waves
