@@ -12,6 +12,8 @@ Ocean rendering on a 1000x1000 plane using the Phillips Spectra & an optimized G
 - Sea Foam
 
 ## Screenshots/Video [captured on a GTX 1050 4GB (mobile)]
+![WaterWithFFT_HighResScreenshot_V11_2 BDRF Alternative_2](https://github.com/gabriel-nkole/WaterWithFFT/assets/101514971/1331bed1-1de3-4a01-8e1e-28cf274e4b67)
+
 https://github.com/gabriel-nkole/WaterWithFFT/assets/101514971/f10a16c0-96ef-4c69-9cbe-723b1c9aa455
 
 https://github.com/gabriel-nkole/WaterWithFFT/assets/101514971/bbc7ab67-e48c-4456-8f46-4e5c45450b7b
