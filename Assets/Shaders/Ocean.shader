@@ -18,7 +18,7 @@ Shader "Custom/Ocean"{
 
         FoamFactor ("Foam Factor", Range(0, 1)) = 1
 
-        //Amplitude (A) should be more accurate when they all sum to one
+        // Amplitude (A) should be more accurate when they all sum to one
         A0 ("A0", Range(0, 1)) = 1 
         A1 ("A1", Range(0, 1)) = 0.7 
         A2 ("A2", Range(0, 1)) = 1 
@@ -208,7 +208,7 @@ Shader "Custom/Ocean"{
                 float3 L = UnityWorldSpaceLightDir(i.wPos).xyz;
                 float attenuation = LIGHT_ATTENUATION(i);
 
-                //V
+                // V
                 float3 V = normalize(_WorldSpaceCameraPos - i.wPos);
                 
                 // H
@@ -224,7 +224,7 @@ Shader "Custom/Ocean"{
                 float3 col = 0;
 
 
-                //P BR
+                // PBR
                 float3 F0 = 0;
                 float3 Ks = F(F0, V, H);
                 float3 Kd = 1 - Ks;
