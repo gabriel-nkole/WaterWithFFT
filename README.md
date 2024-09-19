@@ -12,8 +12,8 @@ Ocean rendering on a 1000mx1000m plane using the Phillips Spectra & an optimized
 - Sea Foam
 
 ## Notes
-Glorious Pink skybox obtained from the AllSky Free asset - https://assetstore.unity.com/packages/2d/textures-materials/sky/allsky-free-10-sky-skybox-set-146014.
-Skyboxes must be converted to Rectlinear format to work.
+- Skybox (Glorious Pink) obtained from the AllSky Free Unity asset - https://assetstore.unity.com/packages/2d/textures-materials/sky/allsky-free-10-sky-skybox-set-146014 [rpgwhitelock (Standard Unity Asset Store EULA)].
+- Skyboxes must be in Rectlinear format to work.
 
 ## Screenshots/Video [captured on a GTX 1050 4GB (mobile)]
 ![WaterWithFFT_HighResScreenshot_V11_2 BDRF Alternative_2](https://github.com/gabriel-nkole/WaterWithFFT/assets/101514971/1331bed1-1de3-4a01-8e1e-28cf274e4b67)
