@@ -7,20 +7,20 @@ Shader "Custom/WaterSky" {
 
         Pass {
             CGPROGRAM
-            #pragma vertex vert
-            #pragma fragment frag
+            #pragma vertex Vertex
+            #pragma fragment Fragment
 
             #include "UnityCG.cginc"
 
             #include "SkySampling.cginc"
 
 
-            struct appdata {
+            struct MeshData {
                 float4 vertex : POSITION;
                 float3 viewDir : TEXCOORD0;
             };
 
-            struct v2f {
+            struct Interpolators {
                 float3 viewDir : TEXCOORD0;
                 float4 vertex : SV_POSITION;
             };
@@ -29,14 +29,14 @@ Shader "Custom/WaterSky" {
             float4 _MainTex_ST;
 
 
-            v2f vert (appdata v) {
-                v2f o;
+            Interpolators Vertex(MeshData v) {
+                Interpolators o;
                 o.vertex = UnityObjectToClipPos(v.vertex);
                 o.viewDir = v.viewDir;
                 return o;
             }
 
-            float3 frag (v2f i) : SV_Target {
+            float3 Fragment(Interpolators i) : SV_Target {
                 // sample the texture
                 float3 rotatedViewDir = mul(Rotate(90), float4(i.viewDir, 1)).xyz;
                 float3 col = tex2D(_MainTex, DirToRectilinear(rotatedViewDir));

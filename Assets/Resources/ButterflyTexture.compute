@@ -1,25 +1,31 @@
 #pragma kernel CreateButterflyTexture
 
-//general
-float M;
-uint bits;
-
-RWTexture2D<float4> butterfly;
-
 #define pi 3.14159
 
-uint bitsReversed(uint num) {
+
+// texture params
+float M;
+uint numBits;
+
+
+// Out
+RWTexture2D<float4> butterfly;
+
+
+
+uint reverseBits(uint num) {
     uint rev = 0;
-    for (uint i = 0; i < bits; i++) {
+    for (uint i = 0; i < numBits; i++) {
         uint bit_n = (num >> i) & (uint)1;
-        rev = rev | (bit_n << (bits-1 - i));
+        rev = rev | (bit_n << (numBits-1 - i));
     }
     return rev;
 }
 
+// butterfly texture for the IFT
 [numthreads(8,8,1)]
-void CreateButterflyTexture (uint3 id : SV_DispatchThreadID){
-    if(id.x < bits && id.y < uint(M)){
+void CreateButterflyTexture(uint3 id : SV_DispatchThreadID) {
+    if (id.x < numBits && id.y < uint(M)) {
         float m = id.y;
         float stage = id.x;
 
@@ -31,32 +37,32 @@ void CreateButterflyTexture (uint3 id : SV_DispatchThreadID){
         int butterflyspan = int(pow(2, stage));
 
         int butterflywing = 0;
-        if(fmod(m, pow(2, stage + 1)) < pow(2, stage)){
+        if (fmod(m, pow(2, stage + 1)) < pow(2, stage)) {
             butterflywing = 1;
         }
 
 
-        if (stage == 0.0){
-            if (butterflywing == 1){
+        if (stage == 0.0) {
+            if (butterflywing == 1) {
                 butterfly[id.xy] = float4(
-                    twiddle_real, twiddle_imag, bitsReversed(m), bitsReversed(m+1)
+                    twiddle_real, twiddle_imag, reverseBits(m), reverseBits(m+1)
                 );
             }
 
-            else{
+            else {
                 butterfly[id.xy] = float4(
-                    twiddle_real, twiddle_imag, bitsReversed(m-1), bitsReversed(m)
+                    twiddle_real, twiddle_imag, reverseBits(m-1), reverseBits(m)
                 );
             }
         }
         else{
-            if (butterflywing == 1){
+            if (butterflywing == 1) {
                 butterfly[id.xy] = float4(
                     twiddle_real, twiddle_imag, m, m + butterflyspan
                 );
             }
 
-            else{
+            else {
                 butterfly[id.xy] = float4(
                     twiddle_real, twiddle_imag, m - butterflyspan, m
                 );

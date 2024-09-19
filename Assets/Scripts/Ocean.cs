@@ -7,7 +7,7 @@ using Random = Unity.Mathematics.Random;
 
 
 public class Ocean : MonoBehaviour {
-    //General Parameters
+    // General Parameters
     [SerializeField, Range(1, 10)]
     public int SimulationSpeed = 8;
 
@@ -17,7 +17,7 @@ public class Ocean : MonoBehaviour {
     private int M;
 
 
-    //Wind Parameters
+    // Wind Parameters
     [SerializeField, Range(1, 20)]
     public float Gravity = 9.80665f;
 
@@ -29,25 +29,22 @@ public class Ocean : MonoBehaviour {
     [SerializeField]
     public Vector2 WindDirection = new Vector2(1, 1);
 
-    private float WindMagnitude;
-
     [SerializeField, Range(1, 4)]
-    public int DirectionExpOver2 = 2;    
+    public int DirectionExpOver2 = 2;   //exponent for suppressing waves perpendicular to wind [1 -> 2, 2 -> 4, 3 -> 6, 4 -> 8, ...] 
 
     [SerializeField, Range(1, 100)]
     public float Amplitude = 4.0f;
 
     [SerializeField, Range(0, 1)]         
-    public float smallL = 0.5f;
+    public float smallL = 0.5f;   //small wave suppression coefficient
 
 
-    //Displacement Parameters
+    // Displacement Parameters
     [SerializeField, Range(0, 1f)]
-    public float lambda = 1f;
+    public float lambda = 1f;   //lateral displacement strength
 
 
-    //Foam
-    //[SerializeField, Range(-10, 1)]
+    // Foam
     [SerializeField, Range(-2, 1)]
     public float FoamBias = 0.68f;
 
@@ -58,7 +55,7 @@ public class Ocean : MonoBehaviour {
     public Color FoamColor = Color.gray;
 
 
-    //Thread Info
+    // Thread Info
     private const int LOCAL_WORK_GROUPS_X = 8;
     private const int LOCAL_WORK_GROUPS_Y = 8;
 
@@ -66,12 +63,12 @@ public class Ocean : MonoBehaviour {
     private int threadGroupsY;
 
 
-    //Ocean Material
+    // Ocean Material
     [SerializeField]
     public Material OceanMaterial;
     
 
-    //Pre-Computed Stuff
+    // Pre-computed Textures (Noise, Butterfly)
     private NativeArray<Color> noiseArr;
     private Texture2D noise;
     private Random rand;
@@ -80,48 +77,45 @@ public class Ocean : MonoBehaviour {
     private RenderTexture butterfly;
 
 
-    //Cascades
+    // Cascades
     private CascadeParams cascParams;
     private Cascade Cascade0;
     private Cascade Cascade1;
     private Cascade Cascade2;
 
 
-    //Extras
+    // Extras
     private float elapsedTime = 0f;
+
 
 
     void Awake() {
         ButterflyTexture_CS = Resources.Load<ComputeShader>("ButterflyTexture");
     }
     
-
-    void OnEnable(){
-        //INITIALIZATION
+    void OnEnable() {
+        // Initialisation
         M = (int) Mathf.Pow(2f, Resolution);
         threadGroupsX = Mathf.CeilToInt(M/(float)LOCAL_WORK_GROUPS_X);
         threadGroupsY = Mathf.CeilToInt(M/(float)LOCAL_WORK_GROUPS_Y);
 
         L_ = WindSpeed*WindSpeed/Gravity;
-        WindMagnitude = WindDirection.magnitude;
 
 
-        //SETTING PARAMETERS
+        // Setting parameters to be sent to cascades
         cascParams.Resolution = Resolution;
         cascParams.M = M;
 
         cascParams.Gravity = Gravity;
         cascParams.WindSpeed = WindSpeed;
         cascParams.L_ = L_;
-        cascParams.WindDirection = WindDirection;
-        cascParams.WindMagnitude = WindMagnitude;
+        cascParams.WindDirection = WindDirection.normalized;
         cascParams.DirectionExpOver2 = DirectionExpOver2;
         cascParams.Amplitude = Amplitude;
         cascParams.smallL = smallL;
 
         cascParams.lambda = lambda;
 
-        //cascParams.FoamBias = (FoamBias / 10f + 0.9f);
         cascParams.FoamBias = FoamBias;
         cascParams.decayFactor = decayFactor;
         cascParams.FoamColor = FoamColor;
@@ -133,7 +127,7 @@ public class Ocean : MonoBehaviour {
         cascParams.OceanMaterial = OceanMaterial;
 
 
-        //NOISE COMPUTATION
+        // Noise Texture Computation (CPU)
         noise = new Texture2D(M, M, TextureFormat.RGBAFloat, false);
         noise.filterMode = FilterMode.Point;
         noise.wrapMode = TextureWrapMode.Clamp;
@@ -146,16 +140,16 @@ public class Ocean : MonoBehaviour {
         noise.Apply();
 
 
-        //BUTTERFLY TEXTURE COMPUTATION
+        // Butterfly Texture Computation (GPU)
         butterfly = CreateButterflyRenderTexture(cascParams.Resolution, cascParams.M, FilterMode.Point, TextureWrapMode.Clamp);
         ButterflyTexture_CS.SetFloat("M", cascParams.M);
-        ButterflyTexture_CS.SetInt("bits", cascParams.Resolution);
+        ButterflyTexture_CS.SetInt("numBits", cascParams.Resolution);
         ButterflyTexture_CS.SetTexture(0, "butterfly", butterfly);
         
         ButterflyTexture_CS.Dispatch(0, Mathf.CeilToInt(cascParams.Resolution / (float)cascParams.LOCAL_WORK_GROUPS_X), cascParams.threadGroupsY, 1);
 
 
-        //CASCADES
+        // Initialise cascades at different length scales (1000m, 250m, 50m)
         Cascade0 = CreateCascade(0, 1000, 1000);
         Cascade0.OnEnable();
         Cascade1 = CreateCascade(1, 250, 1000);
@@ -165,7 +159,7 @@ public class Ocean : MonoBehaviour {
     }
 
     void OnDisable() {
-        //CASCADES
+        // Free cascades
         Cascade0.OnDisable();
         Cascade0 = null;
         Cascade1.OnDisable();
@@ -174,14 +168,17 @@ public class Ocean : MonoBehaviour {
         Cascade2 = null;
 
 
+        // Free noise data
         noiseArr.Dispose();
         Destroy(noise);
 
+        // Free butterfly texture
         butterfly.Release();
         butterfly = null;
     }
 
-    void OnValidate(){
+    void OnValidate() {
+        // Refresh whenever parameters are updated
         if (Cascade0 != null && enabled) {
             OnDisable();
             OnEnable();
@@ -189,11 +186,11 @@ public class Ocean : MonoBehaviour {
     }
 
 
-    void Update(){
+    void Update() {
         float deltaT = Time.unscaledDeltaTime * SimulationSpeed;
         elapsedTime += deltaT;
 
-        //CASCADES
+        // Update cascades
         Cascade0.Update(elapsedTime, deltaT);
         Cascade1.Update(elapsedTime, deltaT);
         Cascade2.Update(elapsedTime, deltaT);
@@ -221,7 +218,7 @@ public class Ocean : MonoBehaviour {
         }
     }
 
-    public static RenderTexture CreateButterflyRenderTexture(int width, int height, FilterMode fM, TextureWrapMode wM){
+    public static RenderTexture CreateButterflyRenderTexture(int width, int height, FilterMode fM, TextureWrapMode wM) {
         RenderTexture rt = new RenderTexture(width, height, 0, RenderTextureFormat.ARGBFloat, RenderTextureReadWrite.Linear);
         rt.enableRandomWrite = true;
         rt.filterMode = fM;
@@ -230,7 +227,7 @@ public class Ocean : MonoBehaviour {
         return rt;
     }
 
-    public Cascade CreateCascade(int ID, int inL, int inL0){
+    public Cascade CreateCascade(int ID, int inL, int inL0) {
         return new Cascade(ID, inL, inL0, cascParams, noise, butterfly);
     }
 }

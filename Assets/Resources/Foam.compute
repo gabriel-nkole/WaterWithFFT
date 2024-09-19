@@ -1,9 +1,10 @@
 #pragma kernel FoamCompute
 
-//Texture params
+
+// texture params
 float M;
 
-//Foam params
+// foam params
 float lambda;
 float FoamBias;
 float decayFactor;
@@ -11,38 +12,38 @@ float4 FoamColor;
 float L0divL;
 
 
-//In
+// In
 float deltaT;
 Texture2D<float4> Displacement;
 Texture2D<float4> Slope;
 
-//Out
+// Out
 RWTexture2D<float4> Foam;
 
 
+
 [numthreads(8,8,1)]
-void FoamCompute (uint3 id : SV_DispatchThreadID){
-    if(id.x < uint(M) && id.y < uint(M)){
-        //current foam
+void FoamCompute(uint3 id : SV_DispatchThreadID){
+    if (id.x < uint(M) && id.y < uint(M)) {
+        // current foam
         float4 col = Foam[id.xy];
 
-        //decay
+        // exponential decay
         col = pow(abs(decayFactor), deltaT) * col;
 
-        //derivatives
+        // derivatives
         float dXdx = Displacement[id.xy].w * L0divL;
         float4 d = Slope[id.xy] * L0divL;
         float dZdx = d.z;
         float dZdz = d.w;
 
-        //jacobian
+        // calculate jacobian
         float det = (1 + dXdx)*(1 + dZdz) - dZdx*dZdx;
-        if(det-FoamBias < 0){
-            //col += saturate(det);
-            col += 0.1*FoamColor;
+        if (det-FoamBias < 0) {
+            col += 0.1*FoamColor;   // if jacobian is negative, add a little foam
         }
 
-        //col = max(col, 0.5);
+        // set new foam
         Foam[id.xy] = col;
     }
 }

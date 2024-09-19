@@ -1,13 +1,13 @@
 using UnityEngine;
 
 public struct CascadeParams {
-    //General Parameters
+    // Texture Parameters
     public int Resolution;
 
     public int M;
 
 
-    //Wind Parameters
+    // Wind Parameters
     public float Gravity;
 
     public float WindSpeed;
@@ -16,8 +16,6 @@ public struct CascadeParams {
 
     public Vector2 WindDirection;
 
-    public float WindMagnitude;
-
     public int DirectionExpOver2;
 
     public float Amplitude;
@@ -25,11 +23,11 @@ public struct CascadeParams {
     public float smallL;
 
 
-    //Displacement Parameters
+    // Displacement Parameters
     public float lambda;
 
 
-    //Foam
+    // Foam
     public float FoamBias;
 
     public float decayFactor;
@@ -37,18 +35,19 @@ public struct CascadeParams {
     public Color FoamColor;
 
 
-    //Thread Info
+    // Thread Info
     public int LOCAL_WORK_GROUPS_X;
     public int threadGroupsX;
     public int threadGroupsY;
 
 
-    //Ocean Material
+    // Ocean Material
     public Material OceanMaterial;
 };
 
-public class Cascade{
-    //Input Parameters
+
+public class Cascade {
+    // Input Parameters
     private int ID;
     private int L;
     private int L0;
@@ -58,15 +57,15 @@ public class Cascade{
     private RenderTexture butterfly;
 
 
-    //Compute Shaders
+    // Compute Shaders
     private ComputeShader InitialSpectrum_CS = Object.Instantiate(Resources.Load<ComputeShader>("InitialSpectrum"));
     private ComputeShader Spectrum_CS = Object.Instantiate(Resources.Load<ComputeShader>("Spectrum"));
     private ComputeShader Butterflies_CS = Object.Instantiate(Resources.Load<ComputeShader>("Butterflies"));
-    private ComputeShader Normalization_CS = Object.Instantiate(Resources.Load<ComputeShader>("Normalization"));
+    private ComputeShader Normalise_CS = Object.Instantiate(Resources.Load<ComputeShader>("Normalise"));
     private ComputeShader Foam_CS = Object.Instantiate(Resources.Load<ComputeShader>("Foam"));
 
     
-    //Textures
+    // Textures
     private RenderTexture h0k;
     private RenderTexture h0minusk;
 
@@ -92,8 +91,8 @@ public class Cascade{
     }
 
 
-    public void OnEnable(){
-        //Texture Allocation
+    public void OnEnable() {
+        // Texture Allocation
         h0k = CreateRenderTexture(cascParams.M, FilterMode.Trilinear, TextureWrapMode.Repeat, false, RenderTextureFormat.RGFloat);
         h0minusk = CreateRenderTexture(cascParams.M, FilterMode.Trilinear, TextureWrapMode.Repeat, false, RenderTextureFormat.RGFloat);
 
@@ -109,15 +108,14 @@ public class Cascade{
 
 
         
-        //Initial Spectrum
+        // Initial Spectrum
         InitialSpectrum_CS.SetFloat("M", cascParams.M);
         InitialSpectrum_CS.SetFloat("L", L);
 
         InitialSpectrum_CS.SetFloat("g", cascParams.Gravity);
         InitialSpectrum_CS.SetFloat("V", cascParams.WindSpeed);
         InitialSpectrum_CS.SetFloat("L_", cascParams.L_);
-        InitialSpectrum_CS.SetVector("W", cascParams.WindDirection);
-        InitialSpectrum_CS.SetFloat("w", Mathf.Max(cascParams.WindMagnitude, 0.0001f));
+        InitialSpectrum_CS.SetVector("windDirection", cascParams.WindDirection);
         InitialSpectrum_CS.SetInt("directionExp", cascParams.DirectionExpOver2 * 2);
         InitialSpectrum_CS.SetFloat("A", cascParams.Amplitude);
         InitialSpectrum_CS.SetFloat("l", cascParams.smallL);
@@ -128,7 +126,7 @@ public class Cascade{
         InitialSpectrum_CS.Dispatch(0, cascParams.threadGroupsX, cascParams.threadGroupsY, 1);
 
 
-        //Spectrum (setup)
+        // Spectrum (setup)
         Spectrum_CS.SetFloat("M", cascParams.M);
         Spectrum_CS.SetFloat("L", L);
         Spectrum_CS.SetFloat("g", cascParams.Gravity);
@@ -138,7 +136,7 @@ public class Cascade{
         Spectrum_CS.SetTexture(0, "dYdx_dYdz_dZdx_dZdz", dYdx_dYdz_dZdx_dZdz);
 
 
-        //Butterflies (setup)
+        // Butterflies (setup)
         Butterflies_CS.SetFloat("M", cascParams.M);
         Butterflies_CS.SetTexture(0, "butterfly", butterfly);
         Butterflies_CS.SetTexture(0, "pingpong0", pingpong0);
@@ -149,16 +147,16 @@ public class Cascade{
         Butterflies_CS.SetTexture(1, "pingpong1", pingpong1);
 
 
-        //Normalization (setup)
-        Normalization_CS.SetFloat("M", cascParams.M);
-        Normalization_CS.SetFloat("lambda", cascParams.lambda);
-        Normalization_CS.SetTexture(0, "X_Y_Z_dXdx", X_Y_Z_dXdx);
-        Normalization_CS.SetTexture(0, "dYdx_dYdz_dZdx_dZdz", dYdx_dYdz_dZdx_dZdz);
-        Normalization_CS.SetTexture(0, "Displacement", Displacement);
-        Normalization_CS.SetTexture(0, "Slope", Slope);
+        // Normalise (setup)
+        Normalise_CS.SetFloat("M", cascParams.M);
+        Normalise_CS.SetFloat("lambda", cascParams.lambda);
+        Normalise_CS.SetTexture(0, "X_Y_Z_dXdx", X_Y_Z_dXdx);
+        Normalise_CS.SetTexture(0, "dYdx_dYdz_dZdx_dZdz", dYdx_dYdz_dZdx_dZdz);
+        Normalise_CS.SetTexture(0, "Displacement", Displacement);
+        Normalise_CS.SetTexture(0, "Slope", Slope);
 
 
-        //Foam (setup)
+        // Foam (setup)
         Foam_CS.SetTexture(0, "Displacement", Displacement);
         Foam_CS.SetTexture(0, "Slope", Slope);
         Foam_CS.SetTexture(0, "Foam", Foam);
@@ -172,7 +170,7 @@ public class Cascade{
 
 
 
-        //sending to OceanMat
+        // Sending to Ocean Material
         cascParams.OceanMaterial.SetFloat("A", cascParams.Amplitude);
         
         cascParams.OceanMaterial.SetFloat($"L{ID}", L);
@@ -181,7 +179,7 @@ public class Cascade{
         cascParams.OceanMaterial.SetTexture($"Foam{ID}", Foam);
     }
 
-    public void OnDisable(){
+    public void OnDisable() {
         //Not sure if this needs to be freed, but freeing just in-case
         Object.Destroy(noise);
         butterfly.Release();
@@ -190,21 +188,21 @@ public class Cascade{
         butterfly = null;
 
 
-        //Compute Shaders
+        // Free Compute Shaders
         Object.Destroy(InitialSpectrum_CS);
         Object.Destroy(Spectrum_CS);
         Object.Destroy(Butterflies_CS);
-        Object.Destroy(Normalization_CS);
+        Object.Destroy(Normalise_CS);
         Object.Destroy(Foam);
 
         InitialSpectrum_CS = null;
         Spectrum_CS = null;
         Butterflies_CS = null;
-        Normalization_CS = null;
+        Normalise_CS = null;
         Foam_CS = null;
 
 
-        //Render Textures
+        // Free Render Textures
         h0k.Release();
         h0minusk.Release();
         X_Y_Z_dXdx.Release();
@@ -230,21 +228,21 @@ public class Cascade{
         Foam = null;
     }
 
-    public void Update(float elapsedTime, float deltaT){
-        //FREQUENCY DOMAIN STUFF
-        //hkt
+    public void Update(float elapsedTime, float deltaT) {
+        // Frequency Domain Stuff
+        // hkt
         Spectrum_CS.SetFloat("t", elapsedTime);
         Spectrum_CS.Dispatch(0, cascParams.threadGroupsX, cascParams.threadGroupsY, 1);
 
 
-        //IFT STUFF
+        // IFFTs
         IFFT(X_Y_Z_dXdx);
         IFFT(dYdx_dYdz_dZdx_dZdz);
 
-        Normalization_CS.Dispatch(0, cascParams.threadGroupsX, cascParams.threadGroupsY, 1);
+        Normalise_CS.Dispatch(0, cascParams.threadGroupsX, cascParams.threadGroupsY, 1);
 
 
-        //Foam
+        // Foam
         Foam_CS.SetFloat("deltaT", deltaT);
         Foam_CS.Dispatch(0, cascParams.threadGroupsX, cascParams.threadGroupsY, 1);
 
@@ -255,9 +253,8 @@ public class Cascade{
 
 
 
-
-    //helper functions
-    public static RenderTexture CreateRenderTexture(int size, FilterMode fM, TextureWrapMode wM, bool useMipMaps = false, RenderTextureFormat rtf = RenderTextureFormat.ARGBFloat){
+    // Helper Functions
+    public static RenderTexture CreateRenderTexture(int size, FilterMode fM, TextureWrapMode wM, bool useMipMaps = false, RenderTextureFormat rtf = RenderTextureFormat.ARGBFloat) {
         RenderTexture rt = new RenderTexture(size, size, 0, rtf, RenderTextureReadWrite.Linear);
         rt.enableRandomWrite = true;
         rt.filterMode = fM;
@@ -270,13 +267,12 @@ public class Cascade{
         rt.Create();
         return rt;
     }
-    
 
-    public void IFFT(RenderTexture hkt){
+    public void IFFT(RenderTexture hkt) {
         Graphics.Blit(hkt, pingpong0);
         bool pingpong = false;
 
-        //Horizontal Butterflies
+        // Horizontal Butterflies
         for (int stage = 0; stage < cascParams.Resolution; stage++) { 
             Butterflies_CS.SetBool("pingpong", pingpong);
             Butterflies_CS.SetInt("stage", stage);
@@ -284,7 +280,7 @@ public class Cascade{
             pingpong = !pingpong;
         }
 
-        //Vertical Butterflies
+        // Vertical Butterflies
         for (int stage = 0; stage < cascParams.Resolution; stage++) { 
             Butterflies_CS.SetBool("pingpong", pingpong);
             Butterflies_CS.SetInt("stage", stage);

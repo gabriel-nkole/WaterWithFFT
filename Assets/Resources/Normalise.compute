@@ -1,22 +1,24 @@
-#pragma kernel Normalization
+#pragma kernel Normalise
 
-//Params
+
+// params
 float M;
 float lambda;
 
 
-//In
+// In
 Texture2D<float4> X_Y_Z_dXdx;
 Texture2D<float4> dYdx_dYdz_dZdx_dZdz;
 
-//Out
+// Out
 RWTexture2D<float4> Displacement;
 RWTexture2D<float4> Slope;
 
 
+
 [numthreads(8,8,1)]
-void Normalization (uint3 id : SV_DispatchThreadID){
-    if(id.x < uint(M) && id.y < uint(M)){
+void Normalise(uint3 id : SV_DispatchThreadID) {
+    if (id.x < uint(M) && id.y < uint(M)) {
         float perm = 1.0;
         int idx = int(fmod(int(id.y + id.x), 2));
         perm = idx ? 1.0 : -1.0;

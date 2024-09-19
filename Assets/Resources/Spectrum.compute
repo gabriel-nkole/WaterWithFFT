@@ -3,32 +3,34 @@
 
 #define PI 3.14159265359
 
-//Texture params
+
+// texture params
 float M;
 float L;
 
-//Wind params
+// wind params
 float g;
 
 
-//In
+// In
 RWTexture2D<float2> h0k;
 RWTexture2D<float2> h0minusk;
 float t;
 
-//Out
+// Out
 RWTexture2D<float4> X_Y_Z_dXdx;
 RWTexture2D<float4> dYdx_dYdz_dZdx_dZdz;
 
 
+
 [numthreads(8,8,1)]
-void CreatehkTexture (uint3 id : SV_DispatchThreadID){
-    if(id.x < uint(M) && id.y < uint(M)){
+void CreatehkTexture(uint3 id : SV_DispatchThreadID) {
+    if (id.x < uint(M) && id.y < uint(M)) {
         float2 x = float2(id.xy);
 
         float2 K = 2.0 * PI * (x-M/2) / L;
         float k = length(K);
-        if (k < 0.0001){
+        if (k < 0.0001) {
             k = 0.0001;
         }
 
@@ -39,34 +41,35 @@ void CreatehkTexture (uint3 id : SV_DispatchThreadID){
     
 
     
-        //D
-        //Y
+        // Displacement
+        // Y
         float2 Y = complex_add(complex_mul(h0k[id.xy].rg , comp_1)  ,  complex_mul(h0minusk[id.xy].rg , comp_2));
 
-        //X
+        // X
         float2 X = complex_mul(float2(0, -K.x/k), Y);
 
-        //Z
+        // Z
         float2 Z = complex_mul(float2(0, -K.y/k), Y);
 
 
-        //derivatives
-        //dX/dx
+        // Derivatives
+        // dX/dx
         float2 dXdx = complex_mul(X, float2(K.x, 0));
                       
-        //dY/dx       
+        // dY/dx       
         float2 dYdx = complex_mul(Y, float2(K.x, 0));
                       
-        //dY/dz       
+        // dY/dz       
         float2 dYdz = complex_mul(Y, float2(K.y, 0));
                       
-        //dZ/dx       
+        // dZ/dx       
         float2 dZdx = complex_mul(Z, float2(K.x, 0));
                       
-        //dZ/dz       
+        // dZ/dz       
         float2 dZdz = complex_mul(Z, float2(K.y, 0));
 
 
+        // Half the number of FFTS by packing pairs of values (8 FFTs -> 4 FFTs)
         X_Y_Z_dXdx[id.xy] = float4(X.x - Y.y, X.y + Y.x, Z.x - dXdx.y, Z.y + dXdx.x);
         dYdx_dYdz_dZdx_dZdz[id.xy] = float4(dYdx.x - dYdz.y, dYdx.y + dYdz.x, dZdx.x - dZdz.y, dZdx.y + dZdz.x);
     }

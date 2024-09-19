@@ -1,47 +1,47 @@
-#include "complex_math.cginc"
 #pragma kernel Createh0Texture
 
 #define PI 3.14159265359
 #define bound 4000.0
 
-//Texture params
+
+// texture params
 float M;
 float L;
 
-//Wind params
+// wind params
 float g;
 float V;
 float L_;
 
-float2 W;
-float w;
+float2 windDirection;
 int directionExp;
 
 float A;
 float l;
 
 
-//In
+// In
 Texture2D<float4> noise;
 
-//Out
+// Out
 RWTexture2D<float2> h0k;
 RWTexture2D<float2> h0minusk;
 
 
-float Phillips(float2 K, float k){
-    return (exp(-pow(k*L_, -2)) * pow(k, -4)) * pow(abs(dot(K/k, W/w)), directionExp);
+
+float Phillips(float2 K, float k) {
+    return (exp(-pow(k*L_, -2)) * pow(k, -4)) * pow(abs(dot(K/k, windDirection)), directionExp);
 }
 
 [numthreads(8,8,1)]
-void Createh0Texture (uint3 id : SV_DispatchThreadID){
-    if(id.x < uint(M) && id.y < uint(M)){
+void Createh0Texture(uint3 id : SV_DispatchThreadID) {
+    if (id.x < uint(M) && id.y < uint(M)) {
         float4 noise_vec = noise[id.xy];
         float2 x = float2(id.xy);
 
         float2 K = 2.0 * PI * (x-M/2) / L;
         float k = length(K);
-        if (k < 0.0001){
+        if (k < 0.0001) {
             k = 0.0001;
         }
 
@@ -49,7 +49,7 @@ void Createh0Texture (uint3 id : SV_DispatchThreadID){
         float spectrumFactor = suppressionFactor * 0.5;       
            
 
-        float h0k_val      = A * clamp(sqrt(spectrumFactor * Phillips(K, k)),  -bound, bound);
+        float h0k_val      = A * clamp(sqrt(spectrumFactor * Phillips( K, k)), -bound, bound);
         float h0minusk_val = A * clamp(sqrt(spectrumFactor * Phillips(-K, k)), -bound, bound);
 
         h0k[id.xy]      = float2(noise_vec.xy * h0k_val     );

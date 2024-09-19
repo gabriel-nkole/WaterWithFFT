@@ -13,7 +13,7 @@ struct TessellationControlPoint {
 	UNITY_VERTEX_INPUT_INSTANCE_ID
 };
 
-TessellationControlPoint Vertex(MeshData v){
+TessellationControlPoint Vertex(MeshData v) {
 	TessellationControlPoint output;
 
 	UNITY_SETUP_INSTANCE_ID(v);
@@ -64,9 +64,7 @@ bool TriangleIsCulled (float3 p0, float3 p1, float3 p2, float bias){
 		   TriangleIsBelowClipPlane(p0, p1, p2, 3, bias);
 }
 
-float TessellationEdgeFactor (
-	float3 p0, float3 p1
-) {
+float TessellationEdgeFactor(float3 p0, float3 p1) {
 	float edgeLength = distance(p0, p1);
 
 	float3 edgeCenter = (p0 + p1) * 0.5;
@@ -87,11 +85,11 @@ TessellationFactors PatchConstantFunction(
 	float3 p1 = patch[1].positionWS;
 	float3 p2 = patch[2].positionWS;
 
-	if (TriangleIsCulled(p0, p1, p2, bias)){
+	if (TriangleIsCulled(p0, p1, p2, bias)) {
 		f.edge[0] = f.edge[1] = f.edge[2] = f.inside = 0;
 	}
 	
-	else{
+	else {
 		f.edge[0] = TessellationEdgeFactor(p1, p2);
 		f.edge[1] = TessellationEdgeFactor(p2, p0);
 		f.edge[2] = TessellationEdgeFactor(p0, p1);
@@ -108,5 +106,3 @@ TessellationFactors PatchConstantFunction(
 		patch[0].fieldName * barycentricCoordinates.x + \
 		patch[1].fieldName * barycentricCoordinates.y + \
 		patch[2].fieldName * barycentricCoordinates.z
-
-

@@ -1,19 +1,27 @@
 #include "complex_math.cginc"
-
 #pragma kernel HorizontalButterflyWrapper
 #pragma kernel VerticalButterflyWrapper
 
-//general
+
+// texture params
 float M;
+
+// In
 Texture2D<float4> butterfly;
 
+
+// butterfly params
 bool pingpong;
 int stage;
+
+// In/Out
 RWTexture2D<float4> pingpong0;
 RWTexture2D<float4> pingpong1;
 
 
-void HorizontalButterfly(uint2 coords, RWTexture2D<float4> pingpongIn, RWTexture2D<float4> pingpongOut){
+
+// 2 ffts are performed at a time (red-green, blue-alpha)
+void HorizontalButterfly(uint2 coords, RWTexture2D<float4> pingpongIn, RWTexture2D<float4> pingpongOut) {
     float4 data = butterfly[uint2(stage, coords.x)];
     
     float4 p = pingpongIn[uint2(data.b, coords.y)];
@@ -26,7 +34,7 @@ void HorizontalButterfly(uint2 coords, RWTexture2D<float4> pingpongIn, RWTexture
     pingpongOut[coords] = float4(H1, H2);
 }
 
-void VerticalButterfly(uint2 coords, RWTexture2D<float4> pingpongIn, RWTexture2D<float4> pingpongOut){
+void VerticalButterfly(uint2 coords, RWTexture2D<float4> pingpongIn, RWTexture2D<float4> pingpongOut) {
     float4 data = butterfly[uint2(stage, coords.y)];
 
     float4 p = pingpongIn[uint2(coords.x, data.b)];
@@ -41,7 +49,7 @@ void VerticalButterfly(uint2 coords, RWTexture2D<float4> pingpongIn, RWTexture2D
 
 
 [numthreads(8,8,1)]
-void HorizontalButterflyWrapper (uint3 id : SV_DispatchThreadID){
+void HorizontalButterflyWrapper(uint3 id : SV_DispatchThreadID) {
     if(id.x < uint(M) && id.y < uint(M)){
         if(pingpong==0){
             HorizontalButterfly(id.xy, pingpong0, pingpong1);        
@@ -53,7 +61,7 @@ void HorizontalButterflyWrapper (uint3 id : SV_DispatchThreadID){
 }
 
 [numthreads(8,8,1)]
-void VerticalButterflyWrapper (uint3 id : SV_DispatchThreadID){
+void VerticalButterflyWrapper(uint3 id : SV_DispatchThreadID) {
     if(id.x < uint(M) && id.y < uint(M)){
         if(pingpong==0){
             VerticalButterfly(id.xy, pingpong0, pingpong1);        
