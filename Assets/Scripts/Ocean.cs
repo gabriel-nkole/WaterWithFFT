@@ -95,9 +95,9 @@ public class Ocean : MonoBehaviour {
     
     void OnEnable() {
         // Initialisation
-        M = (int) Mathf.Pow(2f, Resolution);
-        threadGroupsX = Mathf.CeilToInt(M/(float)LOCAL_WORK_GROUPS_X);
-        threadGroupsY = Mathf.CeilToInt(M/(float)LOCAL_WORK_GROUPS_Y);
+        M = (int) Mathf.Pow(2f, (float)Resolution);
+        threadGroupsX = Mathf.CeilToInt((float)M / (float)LOCAL_WORK_GROUPS_X);
+        threadGroupsY = Mathf.CeilToInt((float)M / (float)LOCAL_WORK_GROUPS_Y);
 
         L_ = WindSpeed*WindSpeed/Gravity;
 

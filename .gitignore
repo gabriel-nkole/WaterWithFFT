@@ -3,13 +3,27 @@ Assembly-CSharp.csproj
 Library/
 Logs/
 WaterWithFFT_2.sln
-WaterWithFFT_HighResScreenshot_V11 (foam based on deltaT).png
-WaterWithFFT_HighResScreenshot_V11_2 [BDRF] Alternative.png
-WaterWithFFT_HighResScreenshot_V11_2 [BDRF] Alternative_2.png
-WaterWithFFT_HighResScreenshot_V11_2 [BDRF].png
 obj/
 .vs/
-WaterWithFFT_HighResScreenshot_V11(foam based on deltaT).png
-WaterWithFFT_HighResScreenshot_V11_2[BDRF].png
-WaterWithFFT_HighResScreenshot_V11_2[BDRF]Alternative.png
-WaterWithFFT_HighResScreenshot_V11_2[BDRF]Alternative_2.png
+Media/
+Assets/Textures/AllSkyFree.meta
+Assets/Textures/AllSkyFree/Cartoon Base BlueSky.meta
+Assets/Textures/AllSkyFree/Cartoon Base BlueSky/
+Assets/Textures/AllSkyFree/Cartoon Base NightSky.meta
+Assets/Textures/AllSkyFree/Cartoon Base NightSky/
+Assets/Textures/AllSkyFree/Cold Night.meta
+Assets/Textures/AllSkyFree/Cold Night/
+Assets/Textures/AllSkyFree/Cold Sunset.meta
+Assets/Textures/AllSkyFree/Cold Sunset/
+Assets/Textures/AllSkyFree/Deep Dusk.meta
+Assets/Textures/AllSkyFree/Deep Dusk/
+Assets/Textures/AllSkyFree/Epic_BlueSunset.meta
+Assets/Textures/AllSkyFree/Epic_BlueSunset/
+Assets/Textures/AllSkyFree/Night MoonBurst.meta
+Assets/Textures/AllSkyFree/Night MoonBurst/
+Assets/Textures/AllSkyFree/Overcast Low.meta
+Assets/Textures/AllSkyFree/Overcast Low/
+Assets/Textures/AllSkyFree/Space_AnotherPlanet.meta
+Assets/Textures/AllSkyFree/Space_AnotherPlanet/
+Recordings/
+Temp/
